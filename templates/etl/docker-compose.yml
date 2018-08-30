@@ -14,6 +14,33 @@ services:
     labels:
       io.rancher.container.pull_image: always
       io.rancher.container.hostname_override: container_name
+  generator:
+    image: skalogs/generator:{{etl_version}}
+    environment:
+      JAVA_OPTS: -Xms512m -Xmx512m
+      KAFKA_BOOTSTRAPSERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: prod
+      ELASTICSEARCH_CLUSTERNAME: {{elasticsearch_cluster_name}}
+      ELASTICSEARCH_CUSTOM_INDEX_PREFIX: {{elasticsearch_cluster_name}}
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PASSWORD: changeme
+      ELASTICSEARCH_PORT: '9200'
+      ELASTICSEARCH_USERNAME: elastic
+      ZOOKEEPER_BOOTSTRAP_SERVERS: zookeeper:2181/kafka
+      GENERATOR_BACKEND: http://etl-backend:8090
+    stdin_open: true
+    external_links:
+    - kafka/kafka:kafka
+    - prometheus/prometheus:prometheus
+    - zookeeper/zookeeper:zookeeper
+    - elasticsearch/elasticsearch-client:elasticsearch
+    tty: true
+    ports:
+    - 8099:8099/tcp
+    labels:
+      io.rancher.container.hostname_override: container_name
+      com.prometheus.port: '8099'
+      io.rancher.container.pull_image: always
   etl-backend:
     image: skalogs/skaetl-backend:{{etl_version}}
     environment:
@@ -21,8 +48,8 @@ services:
       KAFKA_BOOTSTRAPSERVERS: kafka:9092
       SPRING_PROFILES_ACTIVE: prod
       IMPORTER_FULLURLSIMULATE: http://simulate:8084
-      ELASTICSEARCH_CLUSTERNAME: skalogs-demo
-      ELASTICSEARCH_CUSTOM_INDEX_PREFIX: skalogs-demo
+      ELASTICSEARCH_CLUSTERNAME: {{elasticsearch_cluster_name}}
+      ELASTICSEARCH_CUSTOM_INDEX_PREFIX: {{elasticsearch_cluster_name}}
       ELASTICSEARCH_HOST: elasticsearch
       ELASTICSEARCH_PASSWORD: changeme
       ELASTICSEARCH_PORT: '9200'
@@ -31,9 +58,9 @@ services:
     stdin_open: true
     external_links:
     - kafka/kafka:kafka
-    - postgres/postgres:postgres
     - prometheus/prometheus:prometheus
     - zookeeper/zookeeper:zookeeper
+    - elasticsearch/elasticsearch-client:elasticsearch
     tty: true
     links:
     - process-importer-simulator:simulate
@@ -44,7 +71,7 @@ services:
       io.rancher.container.hostname_override: container_name
       com.prometheus.port: '8090'
       io.rancher.container.pull_image: always
-      com.prometheus.metricspath: /prometheus
+      com.prometheus.metricspath: /actuator/prometheus
   process-importer-simulator:
     image: skalogs/process-importer-simulator:{{etl_version}}
     environment:
@@ -61,11 +88,8 @@ services:
     ports:
     - 8084:8084/tcp
     labels:
-      com.prometheus.monitoring: 'true'
       io.rancher.container.hostname_override: container_name
-      com.prometheus.port: '8084'
       io.rancher.container.pull_image: always
-      com.prometheus.metricspath: /prometheus
   referential-importer:
     mem_limit: 636870912
     image: skalogs/referential-importer:{{etl_version}}
@@ -75,10 +99,16 @@ services:
       PROCESS_URL_REGISTRY: http://etl-backend:8090
       SPRING_PROFILES_ACTIVE: prod
       ZOOKEEPER_BOOTSTRAP_SERVERS: zookeeper:2181/kafka
+      ELASTICSEARCH_CLUSTERNAME: {{elasticsearch_cluster_name}}
+      ELASTICSEARCH_CUSTOM_INDEX_PREFIX: {{elasticsearch_cluster_name}}
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PASSWORD: changeme
+      ELASTICSEARCH_PORT: '9200'
+      ELASTICSEARCH_USERNAME: elastic
     stdin_open: true
     external_links:
+    - elasticsearch/elasticsearch-client:elasticsearch
     - zookeeper/zookeeper:zookeeper
-    - postgres/postgres:postgres
     - kafka/kafka:kafka
     tty: true
     links:
@@ -90,4 +120,5 @@ services:
       io.rancher.container.hostname_override: container_name
       com.prometheus.port: '8082'
       io.rancher.container.pull_image: always
-      com.prometheus.metricspath: /prometheus
+      io.rancher.scheduler.affinity:container_label_soft_ne: io.rancher.stack_service.name=$${stack_name}/$${service_name}
+      com.prometheus.metricspath: /actuator/prometheus

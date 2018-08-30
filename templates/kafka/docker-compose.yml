@@ -25,6 +25,7 @@ services:
       KAFKA_HEAP_OPTS: "-Xms{{kafka_heap_size}} -Xmx{{kafka_heap_size}}"
       KAFKA_LOG_DIRS: "/kafka/kafka-logs"
       KAFKA_OPTS: "-javaagent:/etc/jmx_exporter/jmx_exporter_agent.jar=1234:/etc/jmx_exporter/kafka-0-8-2.yml"
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
     external_links:
     - zookeeper/zookeeper:zookeeper
     volumes:
@@ -39,7 +40,7 @@ services:
       com.prometheus.monitoring: true
       com.prometheus.port: 1234
     tty: true
-    image: wurstmeister/kafka:1.0.0
+    image: wurstmeister/kafka:2.11-1.1.1
     stdin_open: true
 
   kafka-manager:
@@ -51,7 +52,7 @@ services:
     labels:
       io.rancher.container.hostname_override: container_name
     tty: true
-    image: adopteunops/kafka-manager:1.3.3.17
+    image: hlebalbau/kafka-manager:1.3.3.18
     stdin_open: true
   kafka-manager-setup:
     external_links:
@@ -64,6 +65,7 @@ services:
     image: skalogs/kafka-manager-setup:1.0.0
     environment:
       ZK_HOSTS: "{{kafka_zookeeper_path}}"
+      KAFKA_VERSION: "1.1.0"
     links:
     - kafka-manager:kafka-manager
     stdin_open: true

@@ -10,8 +10,9 @@ client_heap_size: 512m
 client_mem_limit: 1073741824
 
 minimum_master_nodes: 1
-initial_data_nodes: 1
-initial_client_nodes: 1
+elasticsearch_master_scale: 1
+elasticsearch_data_scale: 1
+elasticsearch_client_scale: 1
 
 elk_monitoring_heap_size: 512m
 elk_monitoring_master_mem_limit: 1073741824
@@ -79,7 +80,7 @@ elasticsearch_refresh_interval: 30s
 elasticsearch_nb_replicas: 1
 elasticsearch_plugins_name: []
 
-etl_version: 1.0.1-SNAPSHOT
+etl_version: 1.0.2.1
 
 zookeeper_heap_size: 512m
 #should be 3 for clustering
@@ -99,8 +100,19 @@ elasticsearch_svcadmin_password: "{{elasticsearch_svckibana_password}}"
 
 rancher_dns_root_domain: skalogs.com
 
-importer_heap_size: 512m
-importer_mem_limit: 636870912
+importer_java_opts: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+importer_mem_limit: "{{(512 * 1024 * 1024) + 200}}"
+process_importer_scale: 1
+metric_importer_scale: 1
+
+retry_java_opts: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+retry_mem_limit: "{{512 * 1024 * 1024}}"
+
+error_java_opts: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+error_mem_limit: "{{512 * 1024 * 1024}}"
+
+retry_active_on_startup: true
+error_active_on_startup: true
 
 normalized_project_name: '{{NAME_PROJECT | lower }}'
 rancher_dns_subdomain_fqdn: '{{normalized_project_name}}.{{rancher_dns_root_domain}}'
@@ -131,6 +143,7 @@ zookeeper_viewer_url: 'zookeeper-admin.{{ rancher_dns_subdomain_fqdn }}'
 kafka_manager_url: 'kafka-admin.{{ rancher_dns_subdomain_fqdn }}'
 importer_process_url: 'importer.{{ rancher_dns_subdomain_fqdn }}'
 etl_frontend_url: 'etl.{{ rancher_dns_subdomain_fqdn }}'
+etl_api_url: 'etl-api.{{ rancher_dns_subdomain_fqdn }}'
 
 enduser_kibana_url: 'kibana.{{rancher_dns_subdomain_fqdn}}'
 enduser_elasticsearch_url: 'elasticsearch-api.{{rancher_dns_subdomain_fqdn}}'
@@ -148,3 +161,7 @@ spring_mail_username: ""
 spring_mail_password: ""
 spring_mail_properties_mail_smtp_auth: true
 spring_mail_properties_mail_smtp_starttls_enable: true
+
+buffer_elasticsearch_max_elements: 10000
+buffer_elasticsearch_max_size: 1
+buffer_elasticsearch_max_time: 1

@@ -68,6 +68,30 @@
       },
       "dynamic_templates": [
         {
+          "message_field": {
+            "mapping": {
+              "type": "text"
+            },
+            "match": "message"
+          }
+        },
+        {
+          "text_gen_field": {
+            "mapping": {
+              "type": "text"
+            },
+            "match": "*_text"
+          }
+        },
+        {
+          "keyword_gen_field": {
+            "mapping": {
+              "type": "keyword"
+            },
+            "match": "*_keyword"
+          }
+        },
+        {
           "long_field": {
             "mapping": {
               "type": "long"
@@ -137,14 +161,6 @@
               "type": "long"
             },
             "match": "*_long"
-          }
-        },
-        {
-          "path_string_field": {
-            "mapping": {
-              "type": "text"
-            },
-            "match": "*_text"
           }
         },
         {
